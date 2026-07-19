@@ -1,7 +1,7 @@
 import { createServer as createHttpServer } from 'node:http'
 import { readFile, readdir, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
-import { extname, join, normalize, relative, resolve, sep } from 'node:path'
+import { basename, extname, join, normalize, relative, resolve, sep } from 'node:path'
 import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
 
@@ -12,7 +12,7 @@ const port = Number(process.env.PORT || 5173)
 const production = process.argv.includes('--production')
 
 const ignoredDirectories = new Set([
-  '.git', '.agents', '.codex', 'node_modules', 'dist', 'MathModeling',
+  '.git', '.agents', '.codex', 'node_modules', 'dist', basename(appDir),
 ])
 
 function toId(filePath) {
@@ -71,10 +71,26 @@ async function listDocs(query = '') {
     }
   }))
 
+  const naturalCollator = new Intl.Collator('zh-CN', {
+    numeric: true,
+    sensitivity: 'base',
+  })
+
+  const categoryOrder = (category) => {
+    if (category === '项目首页') return -1
+    const chapter = category.match(/^第(\d+)章/)
+    return chapter ? Number(chapter[1]) : Number.MAX_SAFE_INTEGER
+  }
+
   return docs
     .filter((doc) => !keyword || doc.searchable.includes(keyword))
     .map(({ searchable, ...doc }) => doc)
-    .sort((a, b) => a.category.localeCompare(b.category, 'zh-CN') || a.id.localeCompare(b.id, 'zh-CN'))
+    .sort((a, b) => {
+      const chapterDifference = categoryOrder(a.category) - categoryOrder(b.category)
+      if (chapterDifference) return chapterDifference
+      const categoryDifference = naturalCollator.compare(a.category, b.category)
+      return categoryDifference || naturalCollator.compare(a.id, b.id)
+    })
 }
 
 function safeDocPath(id) {
