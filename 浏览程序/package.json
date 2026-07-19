@@ -1,0 +1,20 @@
+{
+  "name": "math-modeling-docs",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "build": "vite build",
+    "preview": "node server.mjs --production"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "latest",
+    "dompurify": "latest",
+    "katex": "^0.17.0",
+    "marked": "latest",
+    "marked-katex-extension": "^5.1.10",
+    "vite": "latest",
+    "vue": "latest"
+  }
+}
